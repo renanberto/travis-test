@@ -1,0 +1,29 @@
+  pull-request-builder:
+    - detekt
+    - android_lint
+    - unit_test
+    - instrumentation_test
+    - sonarqube_preview
+    - generate_release
+  android-build-master:
+    - detekt
+    - android_lint
+    - unit_test
+    - instrumentation_test
+    - sonarqube_preview
+    - generate_release
+  audit-branch:
+    - android_lint
+    - unit_test
+    - instrumentation_test
+    - generate_release
+    - move_and_rename_apks
+  generate-release:
+    - android_lint
+    - unit_test
+    - instrumentation_test
+    - generate_release
+    - upload_release
+    - update_release_store
+  homologate-release:
+    - homologate-release
