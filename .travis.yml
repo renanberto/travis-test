@@ -17,8 +17,7 @@ stages:
 
 jobs:
   include:
-    stages:
-      - &default-build
+      - stage: default-build
         script:
           - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle agilePromoter:lintProductionDebug appUpdater:lintDebug locationResolver:lintDebug navigationame:lintDebug"
           - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle agilePromoter:testAutomationDebugUnitTest appUpdater:test locationResolver:test navigationame:test logging:test"
@@ -31,7 +30,6 @@ jobs:
           - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle assembleProductionRelease -Pversion=${ANDROID_VERSION}"
           - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle --stop"
       - name: branch-build
-        <<: *default-build
         script:
           - ls
         
