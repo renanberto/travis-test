@@ -10,34 +10,28 @@ before_install:
 cache:
   directories:
     - $HOME/.gradle
+
+stages:
+  - name: default-build
+    if: branch = master OR type = pull_request
+
 jobs:
-  stages:
-    - name: detekt
-      script:
-        - ls
-      if: branch = master OR type = pull_request
-    - name: lint
-      script:
-        - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle agilePromoter:lintProductionDebug appUpdater:lintDebug locationResolver:lintDebug navigationame:lintDebug"
-      if: branch = master OR type = pull_request
-    - name: unit-test
-      script:
-        - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle agilePromoter:testAutomationDebugUnitTest appUpdater:test locationResolver:test navigationame:test logging:test"
-      if: branch = master OR type = pull_request
-    - name: instrumentation-test
-      script:
-        - docker exec -i $CONTAINER_NAME bash -c "adb wait-for-device"
-        - docker exec -i $CONTAINER_NAME bash -c "adb shell settings put global window_animation_scale 0 & adb shell settings put global transition_animation_scale 0 & adb shell settings put global animator_duration_scale 0"
-        - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle -d connectedAutomationDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.package='br.com.involves.ui.tests.integration'"
-        - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle -d connectedAutomationDebugAndroidTest appupdater:connectedDebugAndroidTest -Pcoverage -Pandroid.testInstrumentationRunnerArguments.package='br.com.involves.agilepromoter'"
-      if: branch = master OR type = pull_request
-    - name: sonarqube-preview
-      script:
-        - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle testAutomationDebugUnitTestCoverage"
-        - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle sonarqube -Dsonar.analysis.mode=preview -Dsonar.github.pullRequest=$BRANCHID -Dsonar.github.repository=involvestecnologia/agilepromoter-android -Dsonar.github.oauth="
-      if: branch = master OR type = pull_request
-    - name: generate-release
-      script:
-        - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle assembleProductionRelease -Pversion=${ANDROID_VERSION}"
-        - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle --stop"
-      if: branch = master OR type = pull_request
+  include:
+    stages:
+      - &default-build
+        script:
+          - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle agilePromoter:lintProductionDebug appUpdater:lintDebug locationResolver:lintDebug navigationame:lintDebug"
+          - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle agilePromoter:testAutomationDebugUnitTest appUpdater:test locationResolver:test navigationame:test logging:test"
+          - docker exec -i $CONTAINER_NAME bash -c "adb wait-for-device"
+          - docker exec -i $CONTAINER_NAME bash -c "adb shell settings put global window_animation_scale 0 & adb shell settings put global transition_animation_scale 0 & adb shell settings put global animator_duration_scale 0"
+          - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle -d connectedAutomationDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.package='br.com.involves.ui.tests.integration'"
+          - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle -d connectedAutomationDebugAndroidTest appupdater:connectedDebugAndroidTest -Pcoverage -Pandroid.testInstrumentationRunnerArguments.package='br.com.involves.agilepromoter'"
+          - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle testAutomationDebugUnitTestCoverage"
+          - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle sonarqube -Dsonar.analysis.mode=preview -Dsonar.github.pullRequest=$BRANCHID -Dsonar.github.repository=involvestecnologia/agilepromoter-android -Dsonar.github.oauth="
+          - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle assembleProductionRelease -Pversion=${ANDROID_VERSION}"
+          - docker exec -i $CONTAINER_NAME bash -c "cd /tmp/ && gradle --stop"
+      - name: branch-build
+        <<: *default-build
+        script:
+          - ls
+        
