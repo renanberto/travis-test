@@ -3,7 +3,7 @@ services:
 env:
   - CONTAINER_NAME=android-emulator
 before_install:
-language: go
+language: minimal
   - docker login registry.agilepromoter.com -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
   - docker run -td --privileged --name $CONTAINER_NAME -v $PWD:/tmp -v $HOME/.gradle:/root/.gradle registry.agilepromoter.com/involves-android-app-builder:v6
   - docker exec -i $CONTAINER_NAME bash -c "emulator @stage_emulator -no-window -no-audio &> emulatorlogs.txt &"
